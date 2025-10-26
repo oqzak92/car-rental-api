@@ -454,17 +454,13 @@ Les contributions sont les bienvenues ! Pour contribuer :
 
 ---
 
-## 📝 Licence
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-
----
-
 ## 👥 Auteurs
 
 Développé avec ❤️ par **Zak** et **Youness**
 
-**Contact** : contact@car-rental-api.com
+**Contact Zak** : zakariya.belkassem@next-u.fr,
+
+**Contact Youness** :youness.fatine@next-u.fr
 
 ---
 
