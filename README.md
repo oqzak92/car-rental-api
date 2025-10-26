@@ -223,7 +223,108 @@ Pour les endpoints protégés, incluez le token JWT dans le header :
 Authorization: Bearer <YOUR_JWT_TOKEN>
 ```
 
-## 🧪 Tests
+## 🧪 Tests avec Postman / Insomnia
+
+### Routes protégées
+
+Les endpoints suivants nécessitent une authentification JWT :
+
+- `GET /cars` - Liste des voitures
+- `POST /newcars` - Ajout d'une voiture
+- `GET /rentals` - Liste des locations
+- `POST /rentals` - Création d'une location
+
+### Configuration dans Postman
+
+#### Étape 1 : Obtenir le token JWT
+
+1. Créez une requête `POST` vers `http://localhost:3000/auth/login`
+2. Dans l'onglet **Body** > **raw** > **JSON**, ajoutez :
+
+```json
+{
+  "email": "john@example.com",
+  "password": "SecurePass123"
+}
+```
+
+3. Envoyez la requête et copiez le token JWT de la réponse
+
+#### Étape 2 : Configurer l'authentification
+
+**Méthode 1 : Ajouter le header manuellement**
+
+1. Créez une nouvelle requête `GET` vers `http://localhost:3000/cars`
+2. Allez dans l'onglet **Headers**
+3. Ajoutez un nouveau header :
+   - **Key** : `Authorization`
+   - **Value** : `Bearer <VOTRE_TOKEN_JWT>`
+4. Envoyez la requête
+
+**Méthode 2 : Utiliser une variable d'environnement (recommandé)**
+
+1. Cliquez sur l'icône ⚙️ en haut à droite > **Environments**
+2. Créez un nouvel environnement nommé `Car Rental Local`
+3. Ajoutez une variable :
+   - **Variable** : `token`
+   - **Initial Value** : (laissez vide)
+   - **Current Value** : `<VOTRE_TOKEN_JWT>`
+4. Sélectionnez l'environnement `Car Rental Local` dans le menu déroulant
+5. Dans vos requêtes, utilisez `{{token}}` dans le header Authorization :
+   - **Key** : `Authorization`
+   - **Value** : `Bearer {{token}}`
+
+#### Étape 3 : Exemple complet avec GET /cars
+
+```
+Méthode : GET
+URL : http://localhost:3000/cars
+
+Headers :
+┌─────────────────┬──────────────────────┐
+│ Key             │ Value                │
+├─────────────────┼──────────────────────┤
+│ Authorization   │ Bearer {{token}}     │
+│ Content-Type    │ application/json     │
+└─────────────────┴──────────────────────┘
+```
+
+**Réponse attendue (200 OK) :**
+
+```json
+[
+  {
+    "id": 1,
+    "brand": "Tesla",
+    "model": "Model 3",
+    "year": 2024,
+    "pricePerDay": 89.99,
+    "available": true
+  }
+]
+```
+
+### Configuration dans Insomnia
+
+1. Créez une nouvelle requête
+2. Dans l'onglet **Auth** > sélectionnez **Bearer Token**
+3. Collez votre token JWT dans le champ **Token**
+4. Insomnia ajoutera automatiquement le header `Authorization: Bearer <token>`
+
+### 💡 Astuces
+
+- **Automatiser la récupération du token** : Dans Postman, utilisez les **Tests** scripts pour extraire automatiquement le token de la réponse login et le stocker dans une variable d'environnement :
+
+  ```javascript
+  pm.test("Save token", function () {
+    var jsonData = pm.response.json();
+    pm.environment.set("token", jsonData.token);
+  });
+  ```
+
+- **Vérifier l'expiration** : Si vous obtenez une erreur `401 Unauthorized`, votre token a peut-être expiré. Reconnectez-vous pour en obtenir un nouveau.
+
+## 🧪 Tests automatisés
 
 ```bash
 # Tests unitaires
@@ -273,9 +374,8 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 
 Pour toute question ou suggestion :
 
-- Email : contact@car-rental-api.com
-- Issues : [GitHub Issues](https://github.com/your-repo/issues)
+- Email zak : contact@car-rental-api.com
 
 ---
 
-Développé avec ❤️ par [Votre Nom]
+Développé avec ❤️ par zak et youness
