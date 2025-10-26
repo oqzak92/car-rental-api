@@ -110,6 +110,51 @@ Appliquez les migrations pour créer les tables :
 npx prisma migrate dev --name init
 ```
 
+Après la création des tables, exécutez :
+
+```bash
+npm run seed
+```
+
+pour insérer des fausses données de développement.
+
+<!-- Ajout : section seed -->
+
+### Seed — peupler la base avec des données de test
+
+Un script de seed est fourni dans `prisma/seed.js`. Il supprime les données existantes puis crée des utilisateurs, des voitures et des locations d'exemple.
+
+Étapes :
+
+1. Vérifier que `DATABASE_URL` est correctement défini dans `.env`.
+2. Générer le client Prisma (si nécessaire) :
+
+```bash
+npx prisma generate
+```
+
+3. Lancer le seed :
+
+```bash
+node prisma/seed.js
+```
+
+Optionnel : ajouter un script npm dans `package.json` :
+
+```json
+"scripts": {
+  "seed": "node prisma/seed.js"
+}
+```
+
+puis exécuter :
+
+```bash
+npm run seed
+```
+
+Remarque : le seed réinitialise les tables concernées (deleteMany) — utiliser en environnement de développement uniquement.
+
 ### Vérification
 
 ```bash
