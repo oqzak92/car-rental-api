@@ -1,53 +1,78 @@
 const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcrypt");
 const prisma = new PrismaClient();
 
 async function main() {
+  // Nettoyer la base
   await prisma.rental.deleteMany();
   await prisma.car.deleteMany();
   await prisma.user.deleteMany();
 
-  const usersData = [
-    { email: "alice@example.com", password: "password123" },
-    { email: "bob@example.com", password: "password123" },
-    { email: "carol@example.com", password: "password123" },
-  ];
-
-  const users = [];
-  for (const u of usersData) {
-    const user = await prisma.user.create({ data: u });
-    users.push(user);
-  }
-
-  const carsData = [
-    { brand: "Toyota", model: "Corolla", year: 2018, ownerId: users[0].id },
-    { brand: "Honda", model: "Civic", year: 2020, ownerId: users[1].id },
-    { brand: "Ford", model: "Focus", year: 2017, ownerId: users[0].id },
-    { brand: "BMW", model: "320i", year: 2019, ownerId: users[2].id },
-    { brand: "Audi", model: "A3", year: 2021, ownerId: users[1].id },
-  ];
-
-  const cars = [];
-  for (const c of carsData) {
-    const car = await prisma.car.create({ data: c });
-    cars.push(car);
-  }
-
-  // Locations (rentals) — quelques exemples liant users et cars
-  const rentalsData = [
-    { carId: cars[0].id, userId: users[1].id },
-    { carId: cars[1].id, userId: users[2].id },
-    { carId: cars[3].id, userId: users[0].id },
-  ];
-
-  for (const r of rentalsData) {
-    await prisma.rental.create({ data: r });
-  }
-
-  console.log("Seed terminée :", {
-    users: users.length,
-    cars: cars.length,
-    rentals: rentalsData.length,
+  // Créer 3 utilisateurs
+  const alice = await prisma.user.create({
+    data: {
+      email: "alice@example.com",
+      password: await bcrypt.hash("password123", 10),
+    },
   });
+
+  const bob = await prisma.user.create({
+    data: {
+      email: "bob@example.com",
+      password: await bcrypt.hash("password123", 10),
+    },
+  });
+
+  const carol = await prisma.user.create({
+    data: {
+      email: "carol@example.com",
+      password: await bcrypt.hash("password123", 10),
+    },
+  });
+
+  // Créer 5 voitures
+  const car1 = await prisma.car.create({
+    data: { brand: "Toyota", model: "Corolla", year: 2018, ownerId: alice.id },
+  });
+
+  const car2 = await prisma.car.create({
+    data: { brand: "Honda", model: "Civic", year: 2020, ownerId: bob.id },
+  });
+
+  const car3 = await prisma.car.create({
+    data: { brand: "Ford", model: "Focus", year: 2017, ownerId: alice.id },
+  });
+
+  const car4 = await prisma.car.create({
+    data: { brand: "BMW", model: "320i", year: 2019, ownerId: carol.id },
+  });
+
+  const car5 = await prisma.car.create({
+    data: { brand: "Audi", model: "A3", year: 2021, ownerId: bob.id },
+  });
+
+  // Créer 5 locations
+  await prisma.rental.create({
+    data: { carId: car1.id, userId: bob.id },
+  });
+
+  await prisma.rental.create({
+    data: { carId: car2.id, userId: carol.id },
+  });
+
+  await prisma.rental.create({
+    data: { carId: car4.id, userId: alice.id },
+  });
+
+  await prisma.rental.create({
+    data: { carId: car3.id, userId: bob.id },
+  });
+
+  await prisma.rental.create({
+    data: { carId: car5.id, userId: alice.id },
+  });
+
+  console.log("Seed terminée : 3 users, 5 cars, 5 rentals");
 }
 
 main()

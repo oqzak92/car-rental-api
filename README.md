@@ -2,8 +2,11 @@
 
 API REST moderne pour la gestion de locations de véhicules. Solution complète permettant la gestion des utilisateurs, du parc automobile et des réservations.
 
+---
+
 ## 📋 Table des matières
 
+- [Présentation](#présentation)
 - [Technologies](#technologies)
 - [Prérequis](#prérequis)
 - [Installation](#installation)
@@ -12,31 +15,51 @@ API REST moderne pour la gestion de locations de véhicules. Solution complète 
 - [Démarrage](#démarrage)
 - [Documentation API](#documentation-api)
 - [Tests](#tests)
+- [Structure du projet](#structure-du-projet)
 - [Contribution](#contribution)
+- [Auteurs](#auteurs)
+
+---
+
+## 🎯 Présentation
+
+Cette API REST permet de gérer un système complet de location de véhicules. Elle offre les fonctionnalités suivantes :
+
+- **Authentification sécurisée** avec JWT (JSON Web Tokens)
+- **Gestion des utilisateurs** (inscription, connexion)
+- **Gestion du parc automobile** (ajout, modification, consultation)
+- **Système de réservation** (création et suivi des locations)
+
+---
 
 ## 🛠 Technologies
 
-- **Runtime** : Node.js ≥ 18
+- **Runtime** : Node.js (version 18 ou supérieure)
 - **Framework** : Express.js
-- **ORM** : Prisma
 - **Base de données** : PostgreSQL
+- **ORM** : Prisma
 - **Authentification** : JWT (JSON Web Tokens)
-- **Langage** : JavaScript/TypeScript
+- **Langage** : TypeScript/JavaScript
+
+---
 
 ## ⚡ Prérequis
 
-Assurez-vous d'avoir installé les éléments suivants :
+Avant de commencer, assurez-vous d'avoir installé :
 
-- [Node.js](https://nodejs.org/) version 18 ou supérieure
-- [PostgreSQL](https://www.postgresql.org/) (local ou Docker)
-- [npm](https://www.npmjs.com/) ou [yarn](https://yarnpkg.com/)
+- [Node.js](https://nodejs.org/) (version 18 minimum)
+- [PostgreSQL](https://www.postgresql.org/) (version 13 ou supérieure)
+- [npm](https://www.npmjs.com/) (inclus avec Node.js)
+- [Docker](https://www.docker.com/) (optionnel, recommandé pour PostgreSQL)
+
+---
 
 ## 📦 Installation
 
 ### 1. Cloner le dépôt
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/votre-username/car-rental-api.git
 cd car-rental-api
 ```
 
@@ -46,295 +69,219 @@ cd car-rental-api
 npm install
 ```
 
+---
+
 ## ⚙️ Configuration
 
-### Variables d'environnement
+### Fichier d'environnement
 
-Créez un fichier `.env` à la racine du projet avec les paramètres suivants :
+Créez un fichier `.env` à la racine du projet avec les variables suivantes :
 
 ```env
-# Database
-DATABASE_URL="postgresql://myuser:mypassword@localhost:5432/mydb?schema=public"
+# Configuration de la base de données
+DATABASE_URL="postgresql://myuser:mypassword@localhost:5433/mydb?schema=public"
 
-# Security
-JWT_SECRET=your_super_secret_key_change_this_in_production
+# Clé secrète pour JWT (à modifier impérativement)
+JWT_SECRET=votre_cle_secrete_tres_complexe_et_aleatoire
 
-# Server
+# Configuration du serveur
 PORT=3000
 NODE_ENV=development
 ```
 
-> ⚠️ **Important** : Modifiez les valeurs par défaut, notamment `JWT_SECRET`, avant le déploiement en production.
+> ⚠️ **Sécurité** : Modifiez obligatoirement `JWT_SECRET` et les identifiants de la base de données avant tout déploiement en production.
+
+---
 
 ## 🗄️ Base de données
 
-### Configuration PostgreSQL
+### Option 1 : Installation avec Docker (Recommandée)
 
-#### Méthode 1 : Installation locale
+Cette méthode est la plus simple et évite les conflits de ports.
+
+```bash
+# Démarrer un conteneur PostgreSQL
+docker run --name car-rental-postgres \
+  -e POSTGRES_USER=myuser \
+  -e POSTGRES_PASSWORD=mypassword \
+  -e POSTGRES_DB=mydb \
+  -p 5433:5432 \
+  -d postgres:15-alpine
+```
+
+> 💡 **Note** : Le port `5433` est utilisé pour éviter les conflits avec une installation locale de PostgreSQL (port `5432` par défaut).
+
+### Option 2 : Installation locale de PostgreSQL
+
+Si vous préférez utiliser PostgreSQL installé localement :
 
 ```bash
 # Se connecter à PostgreSQL
 psql -U postgres
 
-# Créer la base de données et l'utilisateur
+# Créer la base de données
 CREATE DATABASE mydb;
+
+# Créer l'utilisateur
 CREATE USER myuser WITH ENCRYPTED PASSWORD 'mypassword';
+
+# Accorder les privilèges
 GRANT ALL PRIVILEGES ON DATABASE mydb TO myuser;
 
-# Configurer le schéma
-DROP SCHEMA public CASCADE;
+# Configurer le schéma (si nécessaire)
+\c mydb
+DROP SCHEMA IF EXISTS public CASCADE;
 CREATE SCHEMA public;
 GRANT ALL ON SCHEMA public TO myuser;
-GRANT ALL ON SCHEMA public TO postgres;
 
-# Quitter psql
+# Quitter
 \q
 ```
 
-#### Méthode 2 : Docker (recommandé)
+### Initialisation de la base de données
 
-```bash
-docker run --name car-rental-postgres \
-  -e POSTGRES_USER=myuser \
-  -e POSTGRES_PASSWORD=mypassword \
-  -e POSTGRES_DB=mydb \
-  -p 5432:5432 \
-  -d postgres:15-alpine
-```
-
-### Migrations Prisma
-
-Appliquez les migrations pour créer les tables :
+#### 1. Appliquer les migrations Prisma
 
 ```bash
 npx prisma migrate dev --name init
 ```
 
-Après la création des tables, exécutez :
+Cette commande crée toutes les tables nécessaires (User, Car, Rental).
 
-```bash
-npm run seed
-```
-
-pour insérer des fausses données de développement.
-
-<!-- Ajout : section seed -->
-
-### Seed — peupler la base avec des données de test
-
-Un script de seed est fourni dans `prisma/seed.js`. Il supprime les données existantes puis crée des utilisateurs, des voitures et des locations d'exemple.
-
-Étapes :
-
-1. Vérifier que `DATABASE_URL` est correctement défini dans `.env`.
-2. Générer le client Prisma (si nécessaire) :
+#### 2. Générer le client Prisma
 
 ```bash
 npx prisma generate
 ```
 
-3. Lancer le seed :
-
-```bash
-node prisma/seed.js
-```
-
-Optionnel : ajouter un script npm dans `package.json` :
-
-```json
-"scripts": {
-  "seed": "node prisma/seed.js"
-}
-```
-
-puis exécuter :
+#### 3. Peupler la base avec des données de test (optionnel)
 
 ```bash
 npm run seed
 ```
 
-Remarque : le seed réinitialise les tables concernées (deleteMany) — utiliser en environnement de développement uniquement.
+Cela créera automatiquement :
 
-### Vérification
+- 3 utilisateurs de test
+- 5 véhicules
+- 3 locations exemple
+
+#### 4. Vérifier l'installation
 
 ```bash
 # Se connecter à la base
-psql -U myuser -d mydb
+psql -h localhost -p 5433 -U myuser -d mydb
 
 # Lister les tables
 \dt
 
-# Tables attendues : User, Car, Rental, _prisma_migrations
+# Résultat attendu :
+#  Schema |        Name          | Type  | Owner
+# --------+----------------------+-------+--------
+#  public | Car                  | table | myuser
+#  public | Rental               | table | myuser
+#  public | User                 | table | myuser
+#  public | _prisma_migrations   | table | myuser
 ```
+
+---
 
 ## 🚀 Démarrage
 
-### Mode développement
+### Démarrer le serveur en mode développement
 
 ```bash
 npm run dev
 ```
 
-Le serveur démarre sur `http://localhost:3000`
+Le serveur démarre sur **http://localhost:3000**
 
-### Test rapide
+### Test rapide de l'API
 
 ```bash
 curl http://localhost:3000
-# Réponse attendue : "🚗 API en route !"
 ```
+
+**Réponse attendue** : `🚗 API en route !`
+
+---
 
 ## 📚 Documentation API
 
-### Authentification
+### 🔐 Authentification
 
-| Méthode | Endpoint         | Description                            | Auth requise |
-| ------- | ---------------- | -------------------------------------- | ------------ |
-| POST    | `/auth/register` | Inscription d'un nouvel utilisateur    | Non          |
-| POST    | `/auth/login`    | Connexion et récupération du token JWT | Non          |
-
-#### Exemple : Inscription
-
-```bash
-curl -X POST http://localhost:3000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john@example.com",
-    "password": "SecurePass123",
-    "name": "John Doe"
-  }'
-```
-
-#### Exemple : Connexion
-
-```bash
-curl -X POST http://localhost:3000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john@example.com",
-    "password": "SecurePass123"
-  }'
-```
-
-### Gestion des voitures
-
-| Méthode | Endpoint    | Description                           | Auth requise |
-| ------- | ----------- | ------------------------------------- | ------------ |
-| GET     | `/cars`     | Liste toutes les voitures disponibles | Oui          |
-| POST    | `/newcars`  | Ajouter une nouvelle voiture          | Oui          |
-| GET     | `/cars/:id` | Détails d'une voiture spécifique      | Oui          |
-
-#### Exemple : Ajouter une voiture
-
-```bash
-curl -X POST http://localhost:3000/newcars \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <YOUR_JWT_TOKEN>" \
-  -d '{
-    "brand": "Tesla",
-    "model": "Model 3",
-    "year": 2024,
-    "pricePerDay": 89.99,
-    "available": true
-  }'
-```
-
-### Gestion des locations
-
-| Méthode | Endpoint       | Description                                 | Auth requise |
-| ------- | -------------- | ------------------------------------------- | ------------ |
-| GET     | `/rentals`     | Liste toutes les locations de l'utilisateur | Oui          |
-| POST    | `/rentals`     | Créer une nouvelle location                 | Oui          |
-| GET     | `/rentals/:id` | Détails d'une location spécifique           | Oui          |
-
-#### Exemple : Créer une location
-
-```bash
-curl -X POST http://localhost:3000/rentals \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <YOUR_JWT_TOKEN>" \
-  -d '{
-    "carId": 1,
-    "startDate": "2025-11-01",
-    "endDate": "2025-11-07"
-  }'
-```
-
-### Authentification des requêtes
-
-Pour les endpoints protégés, incluez le token JWT dans le header :
+Toutes les routes protégées nécessitent un token JWT dans le header :
 
 ```
-Authorization: Bearer <YOUR_JWT_TOKEN>
+Authorization: Bearer <VOTRE_TOKEN_JWT>
 ```
 
-## 🧪 Tests avec Postman / Insomnia
+#### Inscription d'un nouvel utilisateur
 
-### Routes protégées
+```http
+POST /auth/register
+Content-Type: application/json
+```
 
-Les endpoints suivants nécessitent une authentification JWT :
-
-- `GET /cars` - Liste des voitures
-- `POST /newcars` - Ajout d'une voiture
-- `GET /rentals` - Liste des locations
-- `POST /rentals` - Création d'une location
-
-### Configuration dans Postman
-
-#### Étape 1 : Obtenir le token JWT
-
-1. Créez une requête `POST` vers `http://localhost:3000/auth/login`
-2. Dans l'onglet **Body** > **raw** > **JSON**, ajoutez :
+**Body** :
 
 ```json
 {
-  "email": "john@example.com",
+  "email": "user@example.com",
+  "password": "SecurePass123",
+  "name": "John Doe"
+}
+```
+
+**Réponse (201 Created)** :
+
+```json
+{
+  "message": "Utilisateur créé avec succès",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "name": "John Doe"
+  }
+}
+```
+
+#### Connexion
+
+```http
+POST /auth/login
+Content-Type: application/json
+```
+
+**Body** :
+
+```json
+{
+  "email": "user@example.com",
   "password": "SecurePass123"
 }
 ```
 
-3. Envoyez la requête et copiez le token JWT de la réponse
+**Réponse (200 OK)** :
 
-#### Étape 2 : Configurer l'authentification
-
-**Méthode 1 : Ajouter le header manuellement**
-
-1. Créez une nouvelle requête `GET` vers `http://localhost:3000/cars`
-2. Allez dans l'onglet **Headers**
-3. Ajoutez un nouveau header :
-   - **Key** : `Authorization`
-   - **Value** : `Bearer <VOTRE_TOKEN_JWT>`
-4. Envoyez la requête
-
-**Méthode 2 : Utiliser une variable d'environnement (recommandé)**
-
-1. Cliquez sur l'icône ⚙️ en haut à droite > **Environments**
-2. Créez un nouvel environnement nommé `Car Rental Local`
-3. Ajoutez une variable :
-   - **Variable** : `token`
-   - **Initial Value** : (laissez vide)
-   - **Current Value** : `<VOTRE_TOKEN_JWT>`
-4. Sélectionnez l'environnement `Car Rental Local` dans le menu déroulant
-5. Dans vos requêtes, utilisez `{{token}}` dans le header Authorization :
-   - **Key** : `Authorization`
-   - **Value** : `Bearer {{token}}`
-
-#### Étape 3 : Exemple complet avec GET /cars
-
-```
-Méthode : GET
-URL : http://localhost:3000/cars
-
-Headers :
-┌─────────────────┬──────────────────────┐
-│ Key             │ Value                │
-├─────────────────┼──────────────────────┤
-│ Authorization   │ Bearer {{token}}     │
-│ Content-Type    │ application/json     │
-└─────────────────┴──────────────────────┘
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
 ```
 
-**Réponse attendue (200 OK) :**
+---
+
+### 🚗 Gestion des véhicules
+
+#### Lister toutes les voitures disponibles
+
+```http
+GET /cars
+Authorization: Bearer <TOKEN>
+```
+
+**Réponse (200 OK)** :
 
 ```json
 [
@@ -349,78 +296,185 @@ Headers :
 ]
 ```
 
-### Configuration dans Insomnia
+#### Ajouter une nouvelle voiture
 
-1. Créez une nouvelle requête
-2. Dans l'onglet **Auth** > sélectionnez **Bearer Token**
-3. Collez votre token JWT dans le champ **Token**
-4. Insomnia ajoutera automatiquement le header `Authorization: Bearer <token>`
+```http
+POST /newcars
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
 
-### 💡 Astuces
+**Body** :
 
-- **Automatiser la récupération du token** : Dans Postman, utilisez les **Tests** scripts pour extraire automatiquement le token de la réponse login et le stocker dans une variable d'environnement :
+```json
+{
+  "brand": "Tesla",
+  "model": "Model 3",
+  "year": 2024,
+  "pricePerDay": 89.99,
+  "available": true
+}
+```
 
-  ```javascript
-  pm.test("Save token", function () {
-    var jsonData = pm.response.json();
-    pm.environment.set("token", jsonData.token);
-  });
-  ```
+#### Obtenir les détails d'une voiture
 
-- **Vérifier l'expiration** : Si vous obtenez une erreur `401 Unauthorized`, votre token a peut-être expiré. Reconnectez-vous pour en obtenir un nouveau.
+```http
+GET /cars/:id
+Authorization: Bearer <TOKEN>
+```
+
+---
+
+### 📋 Gestion des locations
+
+#### Lister mes locations
+
+```http
+GET /rentals
+Authorization: Bearer <TOKEN>
+```
+
+#### Créer une nouvelle location
+
+```http
+POST /rentals
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+**Body** :
+
+```json
+{
+  "carId": 1,
+  "startDate": "2025-11-01",
+  "endDate": "2025-11-07"
+}
+```
+
+**Réponse (201 Created)** :
+
+```json
+{
+  "id": 1,
+  "carId": 1,
+  "userId": 1,
+  "startDate": "2025-11-01T00:00:00.000Z",
+  "endDate": "2025-11-07T00:00:00.000Z",
+  "totalPrice": 629.93,
+  "status": "PENDING"
+}
+```
+
+#### Détails d'une location
+
+```http
+GET /rentals/:id
+Authorization: Bearer <TOKEN>
+```
+
+---
+
+## 🧪 Tests avec Postman
+
+### Configuration de l'authentification
+
+1. **Obtenir un token JWT** :
+
+   - Envoyez une requête `POST` à `http://localhost:3000/auth/login`
+   - Copiez le token de la réponse
+
+2. **Utiliser le token** :
+
+   - Dans Postman, allez dans l'onglet **Authorization**
+   - Sélectionnez le type **Bearer Token**
+   - Collez votre token
+
+3. **Astuce** : Créez une variable d'environnement
+   - Créez un environnement "Car Rental API"
+   - Ajoutez une variable `jwt_token`
+   - Utilisez `{{jwt_token}}` dans vos requêtes
+
+### Collection Postman
+
+Vous pouvez importer la collection de tests fournie dans le dossier `/postman`.
+
+---
 
 ## 🧪 Tests automatisés
 
 ```bash
-# Tests unitaires
+# Lancer tous les tests
 npm test
 
 # Tests avec couverture
 npm run test:coverage
-
-# Tests d'intégration
-npm run test:integration
 ```
+
+---
 
 ## 📁 Structure du projet
 
 ```
 car-rental-api/
-├── prisma/
+├── prisma
+│   ├── migrations
 │   ├── schema.prisma
-│   └── migrations/
-├── src/
-│   ├── controllers/
-│   ├── routes/
-│   ├── middlewares/
-│   ├── services/
-│   └── utils/
-├── .env
-├── .gitignore
-├── package.json
-└── README.md
+│   └── seed.js
+└── src
+    ├── index.js
+    ├── routes
+    │   ├── authRoutes.js
+    │   ├── carRoutes.js
+    │   └── rentalRoutes.js
+    └── utils
+        └── auth.js
 ```
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! Merci de suivre ces étapes :
-
-1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
-3. Commit vos changements (`git commit -m 'Add some AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
-
-## 📝 License
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-
-## 📧 Contact
-
-Pour toute question ou suggestion :
-
-- Email zak : contact@car-rental-api.com
 
 ---
 
-Développé avec ❤️ par zak et youness
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! Pour contribuer :
+
+1. Forkez le projet
+2. Créez une branche pour votre fonctionnalité
+   ```bash
+   git checkout -b feature/ma-fonctionnalite
+   ```
+3. Committez vos changements
+   ```bash
+   git commit -m "Ajout de ma fonctionnalité"
+   ```
+4. Poussez vers la branche
+   ```bash
+   git push origin feature/ma-fonctionnalite
+   ```
+5. Ouvrez une Pull Request
+
+---
+
+## 📝 Licence
+
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+
+---
+
+## 👥 Auteurs
+
+Développé avec ❤️ par **Zak** et **Youness**
+
+**Contact** : contact@car-rental-api.com
+
+---
+
+## 📖 Ressources complémentaires
+
+- [Documentation Express.js](https://expressjs.com/)
+- [Documentation Prisma](https://www.prisma.io/docs/)
+- [Documentation JWT](https://jwt.io/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+
+---
+
+**Année universitaire** : 2024-2025
